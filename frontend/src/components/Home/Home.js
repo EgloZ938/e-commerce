@@ -18,7 +18,7 @@ const Home = () => {
         setLoading(false);
       }
     };
-
+    
     fetchProducts();
   }, []);
 
