@@ -15,6 +15,22 @@ import Navigation from './components/Navigation/Navigation';
 import Home from './components/Home/Home';
 import { CartProvider } from './components/Contexts/CartContext';
 import { AuthProvider } from './components/Contexts/AuthContext';
+import { useAuth } from './components/Contexts/AuthContext';
+
+// Composant PrivateRoute pour les routes utilisateur
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
 
 // Composant pour gérer l'affichage conditionnel des navigations
 const NavigationWrapper = ({ children }) => {
@@ -29,10 +45,8 @@ const NavigationWrapper = ({ children }) => {
     <>
       {/* Afficher Navigation sur toutes les pages sauf les pages admin */}
       {!isAdminRoute && <Navigation />}
-
       {/* Afficher Navbar uniquement sur les pages admin quand l'utilisateur est connecté */}
       {isAdminRoute && userInfo && <Navbar />}
-
       {/* Wrapper pour le contenu principal avec padding sauf pour les pages admin */}
       <div className={!isAdminRoute ? "max-w-6xl mx-auto px-4 py-8" : ""}>
         {children}
@@ -59,7 +73,16 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/profile" element={<Profile />} />
+
+                {/* Routes protégées utilisateur */}
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute>
+                      <Profile />
+                    </PrivateRoute>
+                  }
+                />
 
                 {/* Routes admin */}
                 <Route
