@@ -8,6 +8,16 @@ function ProductList() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const handleSearch = (event) => {
+        setSearchTerm(event.target.value);
+    };
+
+    const filteredProducts = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (!categoryFilter || product.category === categoryFilter)
+    );
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -95,10 +105,23 @@ function ProductList() {
                     )}
                 </div>
             </div>
+{/* Search Bar Section */}
+<div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="flex items-center justify-between mb-8">
+        <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Rechercher des produits..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+    </div>
+</div>
+
 
             {/* Products Grid */}
             <div className="max-w-7xl mx-auto px-4 pb-16">
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-gray-600 text-lg">
                             Aucun produit trouvé dans cette catégorie.
@@ -112,7 +135,7 @@ function ProductList() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-6 min-[375px]:max-w-sm min-[375px]:mx-auto sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
-                        {products.map((product) => (
+                        {filteredProducts.map((product) => (
                             <div
                                 key={product._id}
                                 className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl"
@@ -203,3 +226,4 @@ function ProductList() {
 }
 
 export default ProductList;
+
