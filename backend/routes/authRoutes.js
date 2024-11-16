@@ -1,9 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { login, getProfile } = require('../controllers/authController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const {
+    login,
+    loginAdmin,
+    register,
+    getUserProfile,
+    updateUserProfile
+} = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.post('/loginAdmin', login);
-router.get('/profile', protect, admin, getProfile);
+// Routes publiques
+router.post('/register', register);
+router.post('/login', login);
+router.post('/loginAdmin', loginAdmin); // ta route admin existante
+
+// Routes protégées
+router.route('/profile')
+    .get(protect, getUserProfile)
+    .put(protect, updateUserProfile);
 
 module.exports = router;
