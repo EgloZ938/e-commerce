@@ -10,6 +10,77 @@ function ProductList() {
     const categoryFilter = searchParams.get('category');
     const [searchTerm, setSearchTerm] = useState('');
 
+// AJOUTER AU PANIER */
+
+    const addToCart = async (product) => {
+        try {
+            // Vérifier si le produit est en stock
+            if (product.countInStock <= 0) {
+                alert("Ce produit n'est plus en stock");
+                return;
+            }
+
+            // Mettre à jour le stock dans la base de données
+            const response = await fetch(`http://localhost:5000/api/products/${product._id}/updateStock`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    countInStock: product.countInStock - 1
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la mise à jour du stock');
+            }
+
+            // Mettre à jour le stock localement
+            const updatedProducts = products.map(p => 
+                p._id === product._id 
+                    ? {...p, countInStock: p.countInStock - 1}
+                    : p
+            );
+            setProducts(updatedProducts);
+
+            // Récupérer le panier actuel du localStorage
+            const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+
+            // Ajouter le produit au panier
+            const cartItem = {
+                _id: product._id,
+                name: product.name,
+                price: product.price,
+                image: product.image.startsWith('/uploads')
+                    ? `http://localhost:5000${product.image}`
+                    : product.image,
+                quantity: 1
+            };
+
+            // Vérifier si le produit est déjà dans le panier
+            const existingItemIndex = currentCart.findIndex(item => item._id === product._id);
+
+            if (existingItemIndex !== -1) {
+                currentCart[existingItemIndex].quantity += 1;
+            } else {
+                currentCart.push(cartItem);
+            }
+
+            // Sauvegarder le panier mis à jour
+            localStorage.setItem('cartItems', JSON.stringify(currentCart));
+
+            alert('Produit ajouté au panier avec succès !');
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert("Une erreur s'est produite lors de l'ajout au panier");
+        }
+    };
+
+
+
+// RECHERCHE DE PRODUITS */
     const handleSearch = (event) => {
         setSearchTerm(event.target.value);
     };
@@ -45,6 +116,7 @@ function ProductList() {
     }, [categoryFilter]);
 
     const clearFilters = () => {
+        setSearchTerm('');
         navigate('/products');
     };
 
@@ -201,6 +273,7 @@ function ProductList() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                addToCart(product);
                                                 console.log('Ajout au panier:', product._id);
                                             }}
                                             disabled={product.countInStock === 0}
