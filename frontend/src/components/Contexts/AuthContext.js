@@ -103,7 +103,8 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setUser(data);
+        setUser(data.user); // Met à jour le user dans le contexte
+        localStorage.setItem('token', data.token);
         return { success: true };
       }
       throw new Error(data.message);
