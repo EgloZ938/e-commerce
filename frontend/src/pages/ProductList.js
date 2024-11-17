@@ -1,26 +1,106 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+// Fonction de recherche améliorée
+const searchProducts = (products, searchTerm) => {
+    if (!searchTerm) return products;
+
+    const searchLower = searchTerm.toLowerCase();
+    return products.filter(product => {
+        return (
+            product.name.toLowerCase().includes(searchLower) ||
+            product.brand.toLowerCase().includes(searchLower) ||
+            product.category.toLowerCase().includes(searchLower) ||
+            product.description.toLowerCase().includes(searchLower) ||
+            product.price.toString().includes(searchLower)
+        );
+    });
+};
+
+// Composant de la barre de recherche
+const SearchSection = ({ searchTerm, setSearchTerm, resultCount }) => {
+    const [isFocused, setIsFocused] = useState(false);
+
+    return (
+        <div className="max-w-2xl mx-auto px-4 py-8">
+            <div className={`relative transition-all duration-300 ${isFocused ? 'transform -translate-y-2' : ''}`}>
+                <div className={`relative flex items-center transition-all duration-300 ${isFocused ? 'shadow-lg' : 'shadow-md'
+                    }`}>
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder="Rechercher par nom, marque, catégorie..."
+                        className="w-full px-12 py-4 border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={`h-5 w-5 transition-all duration-300 ${isFocused ? 'text-indigo-500 scale-110' : ''
+                                }`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                        </svg>
+                    </div>
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                {searchTerm && (
+                    <div className="absolute -bottom-8 left-0 right-0 text-sm text-gray-500 text-center animate-fade-in">
+                        {resultCount} résultat{resultCount !== 1 ? 's' : ''} trouvé{resultCount !== 1 ? 's' : ''}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 function ProductList() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
-    const [searchTerm, setSearchTerm] = useState('');
 
-// AJOUTER AU PANIER */
-
+    // AJOUTER AU PANIER
     const addToCart = async (product) => {
         try {
-            // Vérifier si le produit est en stock
             if (product.countInStock <= 0) {
                 alert("Ce produit n'est plus en stock");
                 return;
             }
 
-            // Mettre à jour le stock dans la base de données
             const response = await fetch(`http://localhost:5000/api/products/${product._id}/updateStock`, {
                 method: 'PUT',
                 headers: {
@@ -36,18 +116,15 @@ function ProductList() {
                 throw new Error(errorData.message || 'Erreur lors de la mise à jour du stock');
             }
 
-            // Mettre à jour le stock localement
-            const updatedProducts = products.map(p => 
-                p._id === product._id 
-                    ? {...p, countInStock: p.countInStock - 1}
+            const updatedProducts = products.map(p =>
+                p._id === product._id
+                    ? { ...p, countInStock: p.countInStock - 1 }
                     : p
             );
             setProducts(updatedProducts);
 
-            // Récupérer le panier actuel du localStorage
             const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
 
-            // Ajouter le produit au panier
             const cartItem = {
                 _id: product._id,
                 name: product.name,
@@ -58,7 +135,6 @@ function ProductList() {
                 quantity: 1
             };
 
-            // Vérifier si le produit est déjà dans le panier
             const existingItemIndex = currentCart.findIndex(item => item._id === product._id);
 
             if (existingItemIndex !== -1) {
@@ -67,9 +143,7 @@ function ProductList() {
                 currentCart.push(cartItem);
             }
 
-            // Sauvegarder le panier mis à jour
             localStorage.setItem('cartItems', JSON.stringify(currentCart));
-
             alert('Produit ajouté au panier avec succès !');
 
         } catch (error) {
@@ -78,32 +152,13 @@ function ProductList() {
         }
     };
 
-
-
-// RECHERCHE DE PRODUITS */
-    const handleSearch = (event) => {
-        setSearchTerm(event.target.value);
-    };
-
-    const filteredProducts = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (!categoryFilter || product.category === categoryFilter)
-    );
-
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 const response = await fetch('http://localhost:5000/api/products');
                 const data = await response.json();
+                setProducts(data);
 
-                // Si une catégorie est spécifiée, filtrer les produits
-                const filteredProducts = categoryFilter
-                    ? data.filter(product => product.category === categoryFilter)
-                    : data;
-
-                setProducts(filteredProducts);
-
-                // Extraire les catégories uniques
                 const uniqueCategories = [...new Set(data.map(product => product.category))];
                 setCategories(uniqueCategories);
             } catch (error) {
@@ -113,7 +168,12 @@ function ProductList() {
             }
         };
         fetchProducts();
-    }, [categoryFilter]);
+    }, []);
+
+    // Filtrer les produits avec la recherche améliorée
+    const filteredProducts = searchProducts(products, searchTerm).filter(
+        product => !categoryFilter || product.category === categoryFilter
+    );
 
     const clearFilters = () => {
         setSearchTerm('');
@@ -158,8 +218,8 @@ function ProductList() {
                                     key={category}
                                     onClick={() => navigate(`/products?category=${category}`)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${categoryFilter === category
-                                            ? 'bg-indigo-600 text-white'
-                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                         }`}
                                 >
                                     {category}
@@ -177,26 +237,20 @@ function ProductList() {
                     )}
                 </div>
             </div>
-{/* Search Bar Section */}
-<div className="max-w-7xl mx-auto px-4 py-8">
-    <div className="flex items-center justify-between mb-8">
-        <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearch}
-            placeholder="Rechercher des produits..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-    </div>
-</div>
 
+            {/* Search Section */}
+            <SearchSection
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                resultCount={filteredProducts.length}
+            />
 
             {/* Products Grid */}
             <div className="max-w-7xl mx-auto px-4 pb-16">
                 {filteredProducts.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-gray-600 text-lg">
-                            Aucun produit trouvé dans cette catégorie.
+                            Aucun produit trouvé.
                         </p>
                         <button
                             onClick={clearFilters}
@@ -246,10 +300,12 @@ function ProductList() {
 
                                 {/* Product Info */}
                                 <div className="flex flex-col">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-1 line-clamp-2">
                                         {product.name}
                                     </h3>
-
+                                    <p className="text-sm text-indigo-500 mb-2 font-medium">
+                                        {product.brand}
+                                    </p>
                                     <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
                                         {product.description}
                                     </p>
@@ -274,16 +330,15 @@ function ProductList() {
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 addToCart(product);
-                                                console.log('Ajout au panier:', product._id);
                                             }}
                                             disabled={product.countInStock === 0}
                                             className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
-                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                                                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                                 }`}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0 a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
                                             Ajouter au panier
                                         </button>
@@ -299,4 +354,3 @@ function ProductList() {
 }
 
 export default ProductList;
-

@@ -100,11 +100,13 @@ const ProductCarousel = ({ products }) => {
 
               {/* Product Info */}
               <div className="flex-1 flex flex-col">
-                <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2">
+                <h3 className="text-lg font-medium text-gray-900 mb-1 line-clamp-2">
                   {product.name}
                 </h3>
-
-                <p className="text-gray-600 mb-4 line-clamp-2 text-sm flex-1">
+                <p className="text-sm text-indigo-500 mb-2 font-medium">
+                  {product.brand}
+                </p>
+                <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
                   {product.description}
                 </p>
 
@@ -131,8 +133,8 @@ const ProductCarousel = ({ products }) => {
                     }}
                     disabled={product.countInStock === 0}
                     className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                      : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,7 +174,7 @@ const Home = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
 
