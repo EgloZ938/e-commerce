@@ -33,7 +33,7 @@ const SearchSection = ({ searchTerm, setSearchTerm, resultCount }) => {
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         placeholder="Rechercher par nom, marque, catégorie..."
-                        className="w-full px-12 py-4 border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                        className="w-full px-12 py-4  border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
                     />
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                         <svg
