@@ -62,8 +62,10 @@ const ProductCarousel = ({ products }) => {
       >
         {products.map((product) => (
           <div
+           onClick={() => window.location.href = `/product/${product._id}`}
             key={product._id}
-            className="flex-none w-[300px] snap-start group"
+            className="flex-none w-[300px] snap-start group cursor-pointer"
+            
           >
             <div className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl">
               {/* Image Container */}
@@ -313,12 +315,16 @@ const Home = () => {
 
       {/* All Products Grid */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4" >
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Tous nos produits</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" >
             {featuredProducts.map((product) => (
+               <div 
+               onClick={() => window.location.href = `/product/${product._id}`} 
+               className='cursor-pointer'
+             >
               <ProductCard
-                key={product._id}
+              key={product._id}
                 product={{
                   ...product,
                   image: product.image.startsWith('/uploads')
@@ -326,6 +332,7 @@ const Home = () => {
                     : product.image
                 }}
               />
+              </div>
             ))}
           </div>
         </div>

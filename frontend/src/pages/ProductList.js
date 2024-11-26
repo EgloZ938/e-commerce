@@ -263,8 +263,9 @@ function ProductList() {
                     <div className="grid grid-cols-1 gap-6 min-[375px]:max-w-sm min-[375px]:mx-auto sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
                         {filteredProducts.map((product) => (
                             <div
+                                onClick={() => window.location.href = `/product/${product._id}`}
                                 key={product._id}
-                                className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl"
+                                className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl cursor-pointer"
                             >
                                 {/* Image Container */}
                                 <div className="h-[250px] mb-6 relative">

@@ -1,9 +1,11 @@
 // ProductCard.js
 const ProductCard = ({ product }) => {
+  
   const handleAddToCart = (e) => {
     e.stopPropagation();
     // Logique d'ajout au panier à implémenter
     console.log('Ajouter au panier:', product._id);
+    
   };
 
   const navigateToProduct = () => {
