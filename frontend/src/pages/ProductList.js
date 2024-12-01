@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCart } from '../../src/components/Contexts/CartContext';
+import { useAuth } from '../../src/components/Contexts/AuthContext';
+
+
 
 // Fonction de recherche améliorée
 const searchProducts = (products, searchTerm) => {
@@ -93,6 +97,7 @@ function ProductList() {
     const [searchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
 
+
     // AJOUTER AU PANIER
     const addToCart = async (product) => {
         try {
@@ -179,6 +184,47 @@ function ProductList() {
         setSearchTerm('');
         navigate('/products');
     };
+
+
+    // const handleAddToCart = async () => {
+    //     if (!isAuthenticated) {
+    //       navigate('/login');
+    //       return;
+    //     }
+    
+    //     if (!product || product.countInStock === 0) {
+    //       return;
+    //     }
+    
+    //     try {
+    //       await addToCart(product);
+    //     } catch (error) {
+    //       console.error('Erreur lors de l\'ajout au panier:', error);
+    //     }
+    //   };
+    
+    //   if (loading) {
+    //     return (
+    //       <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
+    //         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    //       </div>
+    //     );
+    //   }
+    
+    //   if (!product) {
+    //     return (
+    //       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-4rem)]">
+    //         <h2 className="text-2xl font-bold text-gray-800 mb-4">Produit non trouvé</h2>
+    //         <button
+    //           onClick={() => navigate('/products')}
+    //           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+    //         >
+    //           Retour aux produits
+    //         </button>
+    //       </div>
+    //     );
+    //   }
+
 
     if (loading) {
         return (
