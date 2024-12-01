@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../../src/components/Contexts/CartContext';
+import { useAuth } from '../../src/components/Contexts/AuthContext';
 
 function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart, loading: cartLoading } = useCart();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -25,6 +29,23 @@ function ProductDetail() {
 
     fetchProduct();
   }, [id]);
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    if (!product || product.countInStock === 0) {
+      return;
+    }
+
+    try {
+      await addToCart(product);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout au panier:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -51,83 +72,86 @@ function ProductDetail() {
   return (
     <div className="flex justify-center items-center p-4 sm:p-8">
       <div className="w-full max-w-6xl bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="flex flex-col md:flex-row"> {/* Changé en flex-col pour mobile */}
-          {/* Image du produit */}
-          <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-50 p-4 sm:p-8">
-            <div className="w-full h-[300px] md:h-[500px] flex items-center justify-center bg-white rounded-lg shadow-sm">
-              <img
-                src={product.image.startsWith('/uploads')
-                  ? `http://localhost:5000${product.image}`
-                  : product.image
-                }
-                alt={product.name}
-                className="max-h-[250px] md:max-h-[450px] w-auto object-contain"
-              />
-            </div>
+        <div className="flex flex-col md:flex-row">
+          {/* Image Section */}
+          <div className="w-full md:w-1/2 p-8 bg-gray-50">
+            <img
+              src={product.image.startsWith('/uploads')
+                ? `http://localhost:5000${product.image}`
+                : product.image
+              }
+              alt={product.name}
+              className="w-full h-auto object-contain"
+            />
           </div>
 
-          {/* Détails du produit */}
-          <div className="w-full md:w-1/2 bg-white p-4 sm:p-8">
-            {/* En-tête avec nom et bouton fermer */}
-            <div className="flex justify-between items-start mb-6">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
-              <button
-                onClick={() => navigate('/products')}
-                className="text-gray-500 hover:text-gray-700 p-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Prix */}
+          {/* Product Info Section */}
+          <div className="w-full md:w-1/2 p-8">
             <div className="mb-6">
-              <span className="text-3xl md:text-4xl font-bold text-indigo-600">
-                {product.price.toFixed(2)} €
-              </span>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+              <p className="text-lg text-indigo-600 font-semibold">{product.price.toFixed(2)} €</p>
             </div>
 
-            {/* Description */}
             <div className="mb-6">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3">Description</h2>
-              <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              <div className="mb-4">
+                {product.countInStock > 10 ? (
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    En stock
+                  </span>
+                ) : product.countInStock > 0 ? (
+                  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                    Stock limité ({product.countInStock} restants)
+                  </span>
+                ) : (
+                  <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
+                    Rupture de stock
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Détails */}
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-2">Description</h2>
+              <p className="text-gray-600">{product.description}</p>
+            </div>
+
             <div className="mb-8">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">Détails</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500 mb-1">Marque</p>
-                  <p className="font-semibold text-gray-900">{product.brand}</p>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Marque</p>
+                  <p className="font-medium">{product.brand}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500 mb-1">Catégorie</p>
-                  <p className="font-semibold text-gray-900">{product.category}</p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg col-span-2">
-                  <p className="text-sm text-gray-500 mb-1">Stock disponible</p>
-                  <p className="font-semibold text-gray-900">{product.countInStock} unités</p>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Catégorie</p>
+                  <p className="font-medium">{product.category}</p>
                 </div>
               </div>
             </div>
 
-            {/* Boutons */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <button
-                className="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg"
-                onClick={() => {
-                  console.log('Ajouter au panier:', product._id);
-                }}
+                onClick={handleAddToCart}
+                disabled={cartLoading || product.countInStock === 0}
+                className={`w-full py-3 px-4 rounded-lg font-medium ${product.countInStock === 0
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : cartLoading
+                      ? 'bg-indigo-400 text-white'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
               >
-                Ajouter au panier
+                {cartLoading
+                  ? 'Ajout en cours...'
+                  : product.countInStock === 0
+                    ? 'Indisponible'
+                    : 'Ajouter au panier'
+                }
               </button>
+
               <button
-                className="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-gray-200 transition-colors"
                 onClick={() => navigate('/products')}
+                className="w-full py-3 px-4 rounded-lg font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
               >
-                Continuer les achats
+                Retour aux produits
               </button>
             </div>
           </div>

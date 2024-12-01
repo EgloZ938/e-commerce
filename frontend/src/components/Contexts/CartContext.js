@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
@@ -7,85 +8,60 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const { isAuthenticated, user } = useAuth();
 
-  // Load cart from localStorage on mount
+  // Charger le panier depuis l'API quand l'utilisateur est connecté
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    if (isAuthenticated && user) {
+      fetchCart();
     }
-  }, []);
+  }, [isAuthenticated, user]);
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  // Clear messages after 3 seconds
-  useEffect(() => {
-    if (error || successMessage) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccessMessage(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, successMessage]);
-
-  const updateProductStock = async (productId, newStock) => {
+  const fetchCart = async () => {
     try {
-      const response = await fetch(`/api/products/${productId}`, {
-        method: 'PATCH',
+      const response = await fetch('http://localhost:5000/api/cart', {
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          countInStock: newStock,
-        }),
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update stock');
-      }
-
-      return await response.json();
+      if (!response.ok) throw new Error('Erreur lors du chargement du panier');
+      const data = await response.json();
+      setCartItems(data.items || []);
     } catch (error) {
-      throw new Error('Error updating stock');
+      setError("Erreur lors du chargement du panier");
     }
   };
 
   const addToCart = async (product) => {
     setLoading(true);
     try {
-      const existingItem = cartItems.find((item) => item._id === product._id);
-      
-      // Calculate new quantity
-      const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
-      
-      // Check if enough stock
-      if (newQuantity > product.countInStock) {
-        setError("Sorry, not enough items in stock");
-        return;
+      if (!isAuthenticated) {
+        setError("Veuillez vous connecter pour ajouter des articles au panier");
+        return false;
       }
 
-      // Update stock in database
-      await updateProductStock(product._id, product.countInStock - 1);
-
-      setCartItems((prevItems) => {
-        if (existingItem) {
-          return prevItems.map((item) =>
-            item._id === product._id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-        return [...prevItems, { ...product, quantity: 1 }];
+      const response = await fetch('http://localhost:5000/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: 1
+        })
       });
 
-      setSuccessMessage("Item successfully added to cart");
+      if (!response.ok) throw new Error('Erreur lors de l\'ajout au panier');
+
+      const updatedCart = await response.json();
+      setCartItems(updatedCart.items);
+      setSuccessMessage("Produit ajouté au panier avec succès");
+      return true;
 
     } catch (error) {
-      setError("Failed to add item to cart");
+      setError("Échec de l'ajout au panier");
+      return false;
     } finally {
       setLoading(false);
     }
@@ -94,89 +70,68 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     setLoading(true);
     try {
-      const item = cartItems.find((item) => item._id === productId);
-      if (!item) return;
+      const response = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
 
-      // Restore stock in database
-      await updateProductStock(productId, item.countInStock + item.quantity);
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
 
-      setCartItems((prevItems) =>
-        prevItems.filter((item) => item._id !== productId)
-      );
-
-      setSuccessMessage("Item successfully removed from cart");
+      const updatedCart = await response.json();
+      setCartItems(updatedCart.items);
+      setSuccessMessage("Produit retiré du panier");
 
     } catch (error) {
-      setError("Failed to remove item from cart");
+      setError("Échec de la suppression du produit");
     } finally {
       setLoading(false);
     }
   };
 
   const updateQuantity = async (productId, newQuantity) => {
-    setLoading(true);
     try {
-      const item = cartItems.find((item) => item._id === productId);
-      if (!item) return;
-
-      // Check if the new quantity is valid
-      if (newQuantity <= 0) {
-        await removeFromCart(productId);
-        return;
-      }
-
-      // Check if enough stock for the new quantity
-      if (newQuantity > item.countInStock + item.quantity) {
-        setError("Not enough items in stock");
-        return;
-      }
-
-      // Calculate stock difference
-      const stockDiff = item.quantity - newQuantity;
-      await updateProductStock(productId, item.countInStock + stockDiff);
-
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item._id === productId ? { ...item, quantity: newQuantity } : item
-        )
+      // Mise à jour optimiste de l'UI
+      const updatedItems = cartItems.map(item =>
+        item.product._id === productId
+          ? { ...item, quantity: newQuantity }
+          : item
       );
+      setCartItems(updatedItems);
 
-      setSuccessMessage("Cart successfully updated");
+      // Appel API en arrière-plan
+      const response = await fetch('http://localhost:5000/api/cart', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          productId,
+          quantity: newQuantity
+        })
+      });
+
+      if (!response.ok) {
+        // En cas d'erreur, on revient à l'état précédent
+        fetchCart();
+        setError("Erreur lors de la mise à jour");
+      }
 
     } catch (error) {
-      setError("Failed to update quantity");
-    } finally {
-      setLoading(false);
+      fetchCart();
+      setError("Échec de la mise à jour");
     }
   };
 
-  const clearCart = async () => {
-    setLoading(true);
-    try {
-      // Restore all stock quantities
-      await Promise.all(
-        cartItems.map((item) =>
-          updateProductStock(item._id, item.countInStock + item.quantity)
-        )
-      );
-
-      setCartItems([]);
-      setSuccessMessage("All items have been removed from cart");
-
-    } catch (error) {
-      setError("Failed to clear cart");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Calculer le total du panier
   const getCartTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return cartItems.reduce((total, item) =>
+      total + item.product.price * item.quantity, 0);
   };
 
+  // Obtenir le nombre total d'articles
   const getCartCount = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
@@ -191,7 +146,6 @@ export const CartProvider = ({ children }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
-        clearCart,
         getCartTotal,
         getCartCount
       }}

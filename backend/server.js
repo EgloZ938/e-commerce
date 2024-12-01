@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const productRoutes = require('./routes/productRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const authRoutes = require('./routes/authRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 require('dotenv').config();
 
 // Créer le dossier uploads s'il n'existe pas
@@ -38,6 +39,7 @@ app.get('/', (req, res) => {
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Gestion des erreurs améliorée
 app.use((err, req, res, next) => {
