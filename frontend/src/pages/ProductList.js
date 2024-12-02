@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCart } from '../../src/components/Contexts/CartContext';
+import { useAuth } from '../../src/components/Contexts/AuthContext';
 
 // Fonction de recherche améliorée
 const searchProducts = (products, searchTerm) => {
@@ -24,8 +26,7 @@ const SearchSection = ({ searchTerm, setSearchTerm, resultCount }) => {
     return (
         <div className="max-w-2xl mx-auto px-4 py-8">
             <div className={`relative transition-all duration-300 ${isFocused ? 'transform -translate-y-2' : ''}`}>
-                <div className={`relative flex items-center transition-all duration-300 ${isFocused ? 'shadow-lg' : 'shadow-md'
-                    }`}>
+                <div className={`relative flex items-center transition-all duration-300 ${isFocused ? 'shadow-lg' : 'shadow-md'}`}>
                     <input
                         type="text"
                         value={searchTerm}
@@ -33,13 +34,12 @@ const SearchSection = ({ searchTerm, setSearchTerm, resultCount }) => {
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         placeholder="Rechercher par nom, marque, catégorie..."
-                        className="w-full px-12 py-4  border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
+                        className="w-full px-12 py-4 border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
                     />
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className={`h-5 w-5 transition-all duration-300 ${isFocused ? 'text-indigo-500 scale-110' : ''
-                                }`}
+                            className={`h-5 w-5 transition-all duration-300 ${isFocused ? 'text-indigo-500 scale-110' : ''}`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -83,72 +83,45 @@ const SearchSection = ({ searchTerm, setSearchTerm, resultCount }) => {
         </div>
     );
 };
-
 function ProductList() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
+    const { cartItems, addToCart, loading: cartLoading } = useCart();
+    const { isAuthenticated } = useAuth();
 
-    // AJOUTER AU PANIER
-    const addToCart = async (product) => {
+    const getAvailableQuantity = (product) => {
+        const cartItem = cartItems.find(item => item.product._id === product._id);
+        const currentQuantity = cartItem ? cartItem.quantity : 0;
+        return product.countInStock - currentQuantity;
+    };
+
+    const handleAddToCart = async (e, product) => {
+        e.stopPropagation();
+
+        if (!isAuthenticated) {
+            navigate('/login');
+            return;
+        }
+
+        const availableQuantity = getAvailableQuantity(product);
+        if (availableQuantity <= 0) {
+            return;
+        }
+
         try {
-            if (product.countInStock <= 0) {
-                alert("Ce produit n'est plus en stock");
-                return;
-            }
-
-            const response = await fetch(`http://localhost:5000/api/products/${product._id}/updateStock`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    countInStock: product.countInStock - 1
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Erreur lors de la mise à jour du stock');
-            }
-
-            const updatedProducts = products.map(p =>
-                p._id === product._id
-                    ? { ...p, countInStock: p.countInStock - 1 }
-                    : p
-            );
-            setProducts(updatedProducts);
-
-            const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
-
-            const cartItem = {
-                _id: product._id,
-                name: product.name,
-                price: product.price,
-                image: product.image.startsWith('/uploads')
-                    ? `http://localhost:5000${product.image}`
-                    : product.image,
-                quantity: 1
-            };
-
-            const existingItemIndex = currentCart.findIndex(item => item._id === product._id);
-
-            if (existingItemIndex !== -1) {
-                currentCart[existingItemIndex].quantity += 1;
-            } else {
-                currentCart.push(cartItem);
-            }
-
-            localStorage.setItem('cartItems', JSON.stringify(currentCart));
-            alert('Produit ajouté au panier avec succès !');
-
+            await addToCart(product);
+            setSuccessMessage('Produit ajouté au panier avec succès');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
         } catch (error) {
-            console.error('Erreur:', error);
-            alert("Une erreur s'est produite lors de l'ajout au panier");
+            console.error('Erreur lors de l\'ajout au panier:', error);
         }
     };
 
@@ -187,7 +160,6 @@ function ProductList() {
             </div>
         );
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
             {/* Hero Section */}
@@ -206,6 +178,20 @@ function ProductList() {
                     </div>
                 </div>
             </div>
+
+            {/* Message de succès */}
+            {successMessage && (
+                <div className="max-w-7xl mx-auto px-4">
+                    <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
+                        <p className="text-green-700 font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            {successMessage}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Filters Section */}
             <div className="max-w-7xl mx-auto px-4 py-8">
@@ -237,7 +223,6 @@ function ProductList() {
                     )}
                 </div>
             </div>
-
             {/* Search Section */}
             <SearchSection
                 searchTerm={searchTerm}
@@ -263,7 +248,7 @@ function ProductList() {
                     <div className="grid grid-cols-1 gap-6 min-[375px]:max-w-sm min-[375px]:mx-auto sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
                         {filteredProducts.map((product) => (
                             <div
-                                onClick={() => window.location.href = `/product/${product._id}`}
+                                onClick={() => navigate(`/product/${product._id}`)}
                                 key={product._id}
                                 className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl cursor-pointer"
                             >
@@ -320,7 +305,10 @@ function ProductList() {
                                     <div className="space-y-3">
                                         {/* Bouton Voir le produit */}
                                         <button
-                                            onClick={() => navigate(`/product/${product._id}`)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/product/${product._id}`);
+                                            }}
                                             className="w-full bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-indigo-100"
                                         >
                                             Voir le produit
@@ -328,20 +316,28 @@ function ProductList() {
 
                                         {/* Bouton Ajouter au panier */}
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                addToCart(product);
-                                            }}
-                                            disabled={product.countInStock === 0}
+                                            onClick={(e) => handleAddToCart(e, product)}
+                                            disabled={cartLoading || product.countInStock === 0 || getAvailableQuantity(product) <= 0}
                                             className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                                                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                                    : getAvailableQuantity(product) <= 0
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                                        : cartLoading
+                                                            ? 'bg-indigo-100 text-indigo-400 cursor-wait'
+                                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                                 }`}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0 a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
-                                            Ajouter au panier
+                                            {cartLoading
+                                                ? 'Ajout...'
+                                                : product.countInStock === 0
+                                                    ? 'Stock épuisé'
+                                                    : getAvailableQuantity(product) <= 0
+                                                        ? 'Quantité maximum atteinte'
+                                                        : 'Ajouter au panier'
+                                            }
                                         </button>
                                     </div>
                                 </div>

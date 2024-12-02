@@ -6,7 +6,7 @@ import { useAuth } from '../../src/components/Contexts/AuthContext';
 function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState('');  // Modifié pour être une string vide
+  const [successMessage, setSuccessMessage] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const { cartItems, addToCart, loading: cartLoading } = useCart();
@@ -43,14 +43,23 @@ function ProductDetail() {
       return;
     }
 
+    // Vérifie d'abord si le produit est en stock
+    if (!product || product.countInStock === 0) {
+      return;
+    }
+
+    // Ensuite vérifie la quantité disponible
     const availableQuantity = getAvailableQuantity();
-    if (!product || availableQuantity <= 0) {
+    if (availableQuantity <= 0) {
       return;
     }
 
     try {
       await addToCart(product);
       setSuccessMessage('Produit ajouté au panier avec succès');
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
     } catch (error) {
       console.error('Erreur lors de l\'ajout au panier:', error);
     }
@@ -92,7 +101,6 @@ function ProductDetail() {
             </p>
           </div>
         )}
-
 
         <div className="w-full bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="flex flex-col md:flex-row">
@@ -179,19 +187,37 @@ function ProductDetail() {
               <div className="space-y-3">
                 <button
                   onClick={handleAddToCart}
-                  disabled={cartLoading || getAvailableQuantity() <= 0}
-                  className={`w-full px-6 py-3 rounded-lg text-lg font-semibold transition-colors shadow-md hover:shadow-lg ${getAvailableQuantity() <= 0
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-50'  // Ajout de opacity-50 pour plus de clarté
-                      : cartLoading
-                        ? 'bg-indigo-400 text-white'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  disabled={cartLoading || product.countInStock === 0 || getAvailableQuantity() <= 0}
+                  className={`w-full px-6 py-3 rounded-lg text-lg font-semibold transition-colors shadow-md hover:shadow-lg flex items-center justify-center ${product.countInStock === 0
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-50'
+                      : getAvailableQuantity() <= 0
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-50'
+                        : cartLoading
+                          ? 'bg-indigo-400 text-white'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
                   {cartLoading
                     ? 'Ajout en cours...'
-                    : getAvailableQuantity() <= 0
-                      ? 'Quantité maximum atteinte'
-                      : 'Ajouter au panier'
+                    : product.countInStock === 0
+                      ? 'Stock épuisé'
+                      : getAvailableQuantity() <= 0
+                        ? 'Quantité maximum atteinte'
+                        : 'Ajouter au panier'
                   }
                 </button>
                 <button

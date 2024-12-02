@@ -21,6 +21,12 @@ const ProductCard = ({ product }) => {
       return;
     }
 
+    // Vérifie d'abord si le produit est en stock
+    if (product.countInStock === 0) {
+      return;
+    }
+
+    // Ensuite vérifie la quantité disponible
     const availableQuantity = getAvailableQuantity();
     if (availableQuantity <= 0) {
       return;
@@ -100,12 +106,14 @@ const ProductCard = ({ product }) => {
           {/* Bouton Ajouter au panier */}
           <button
             onClick={handleAddToCart}
-            disabled={loading || getAvailableQuantity() <= 0}
-            className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${getAvailableQuantity() <= 0
+            disabled={loading || product.countInStock === 0 || getAvailableQuantity() <= 0}
+            className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                : loading
-                  ? 'bg-indigo-100 text-indigo-400 cursor-wait'
-                  : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                : getAvailableQuantity() <= 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                  : loading
+                    ? 'bg-indigo-100 text-indigo-400 cursor-wait'
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
               }`}
           >
             <svg
@@ -124,9 +132,11 @@ const ProductCard = ({ product }) => {
             </svg>
             {loading
               ? 'Ajout...'
-              : getAvailableQuantity() <= 0
-                ? 'Quantité maximum atteinte'
-                : 'Ajouter au panier'
+              : product.countInStock === 0
+                ? 'Stock épuisé'
+                : getAvailableQuantity() <= 0
+                  ? 'Quantité maximum atteinte'
+                  : 'Ajouter au panier'
             }
           </button>
         </div>
