@@ -1,11 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../Products/ProductCard';
+import { useCart } from '../Contexts/CartContext';
+import { useAuth } from '../Contexts/AuthContext';
 
 const ProductCarousel = ({ products }) => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
   const carouselRef = useRef(null);
+  const { cartItems, addToCart, loading } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const getAvailableQuantity = (product) => {
+    const cartItem = cartItems.find(item => item.product._id === product._id);
+    const currentQuantity = cartItem ? cartItem.quantity : 0;
+    return product.countInStock - currentQuantity;
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const availableQuantity = getAvailableQuantity(product);
+    if (availableQuantity <= 0) {
+      return;
+    }
+
+    try {
+      await addToCart(product);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout au panier:', error);
+    }
+  };
 
   const handleScroll = () => {
     if (carouselRef.current) {
@@ -62,10 +93,9 @@ const ProductCarousel = ({ products }) => {
       >
         {products.map((product) => (
           <div
-           onClick={() => window.location.href = `/product/${product._id}`}
+            onClick={() => navigate(`/product/${product._id}`)}
             key={product._id}
             className="flex-none w-[300px] snap-start group cursor-pointer"
-            
           >
             <div className="bg-white rounded-3xl p-6 transition-all duration-300 hover:shadow-xl">
               {/* Image Container */}
@@ -121,7 +151,10 @@ const ProductCarousel = ({ products }) => {
                 <div className="space-y-3">
                   {/* Bouton Voir le produit */}
                   <button
-                    onClick={() => window.location.href = `/product/${product._id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/product/${product._id}`);
+                    }}
                     className="w-full bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-indigo-100"
                   >
                     Voir le produit
@@ -129,20 +162,24 @@ const ProductCarousel = ({ products }) => {
 
                   {/* Bouton Ajouter au panier */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Ajout au panier:', product._id);
-                    }}
-                    disabled={product.countInStock === 0}
-                    className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                      : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                    onClick={(e) => handleAddToCart(e, product)}
+                    disabled={loading || getAvailableQuantity(product) <= 0}
+                    className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${getAvailableQuantity(product) <= 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                        : loading
+                          ? 'bg-indigo-100 text-indigo-400 cursor-wait'
+                          : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    Ajouter au panier
+                    {loading
+                      ? 'Ajout...'
+                      : getAvailableQuantity(product) <= 0
+                        ? 'Quantité maximum atteinte'
+                        : 'Ajouter au panier'
+                    }
                   </button>
                 </div>
               </div>
@@ -319,19 +356,19 @@ const Home = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Tous nos produits</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" >
             {featuredProducts.map((product) => (
-               <div 
-               onClick={() => window.location.href = `/product/${product._id}`} 
-               className='cursor-pointer'
-             >
-              <ProductCard
-              key={product._id}
-                product={{
-                  ...product,
-                  image: product.image.startsWith('/uploads')
-                    ? `http://localhost:5000${product.image}`
-                    : product.image
-                }}
-              />
+              <div
+                onClick={() => window.location.href = `/product/${product._id}`}
+                className='cursor-pointer'
+              >
+                <ProductCard
+                  key={product._id}
+                  product={{
+                    ...product,
+                    image: product.image.startsWith('/uploads')
+                      ? `http://localhost:5000${product.image}`
+                      : product.image
+                  }}
+                />
               </div>
             ))}
           </div>

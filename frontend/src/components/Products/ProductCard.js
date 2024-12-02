@@ -3,30 +3,31 @@ import { useAuth } from '../Contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
-  const { addToCart, loading } = useCart();
+  const { cartItems, addToCart, loading } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  const getAvailableQuantity = () => {
+    const cartItem = cartItems.find(item => item.product._id === product._id);
+    const currentQuantity = cartItem ? cartItem.quantity : 0;
+    return product.countInStock - currentQuantity;
+  };
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
 
-    // Vérifier si l'utilisateur est connecté
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
 
-    // Vérifier le stock
-    if (product.countInStock === 0) {
+    const availableQuantity = getAvailableQuantity();
+    if (availableQuantity <= 0) {
       return;
     }
 
     try {
-      const success = await addToCart(product);
-      if (success) {
-        // Option : Vous pouvez ajouter ici une notification de succès
-        console.log('Produit ajouté au panier avec succès');
-      }
+      await addToCart(product);
     } catch (error) {
       console.error('Erreur lors de l\'ajout au panier:', error);
     }
@@ -99,8 +100,8 @@ const ProductCard = ({ product }) => {
           {/* Bouton Ajouter au panier */}
           <button
             onClick={handleAddToCart}
-            disabled={loading || product.countInStock === 0}
-            className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${product.countInStock === 0
+            disabled={loading || getAvailableQuantity() <= 0}
+            className={`w-full rounded-lg transition-all duration-200 flex items-center justify-center px-4 py-2 text-sm font-medium ${getAvailableQuantity() <= 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
                 : loading
                   ? 'bg-indigo-100 text-indigo-400 cursor-wait'
@@ -121,7 +122,12 @@ const ProductCard = ({ product }) => {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            {loading ? 'Ajout...' : 'Ajouter au panier'}
+            {loading
+              ? 'Ajout...'
+              : getAvailableQuantity() <= 0
+                ? 'Quantité maximum atteinte'
+                : 'Ajouter au panier'
+            }
           </button>
         </div>
       </div>
