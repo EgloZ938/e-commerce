@@ -1,4 +1,5 @@
 // backend/server.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -8,7 +9,7 @@ const productRoutes = require('./routes/productRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const authRoutes = require('./routes/authRoutes');
 const cartRoutes = require('./routes/cartRoutes');
-require('dotenv').config();
+const stripeRoutes = require('./routes/stripeRoutes');
 
 // Créer le dossier uploads s'il n'existe pas
 const fs = require('fs');
@@ -40,6 +41,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/stripe', stripeRoutes);
 
 // Gestion des erreurs améliorée
 app.use((err, req, res, next) => {

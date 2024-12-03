@@ -1,17 +1,47 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../src/components/Contexts/CartContext';
 import { useAuth } from '../../src/components/Contexts/AuthContext';
+import { useState } from 'react';
+import PaymentModal from '../components/PaymentModal';
+import axios from 'axios';
 
 function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();  // Ajoute ceci
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Vérifier la disponibilité des produits dans le panier
   const checkCartAvailability = () => {
     return cartItems.every(item =>
       item.product.countInStock >= item.quantity && item.product.countInStock > 0
     );
+  };
+
+  const handlePaymentSuccess = async (paymentIntent) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/stripe/payment-success',
+        {
+          paymentIntentId: paymentIntent.id
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+
+      if (response.data.success) {
+        // Vider le panier
+        await removeFromCart();
+        // Rediriger vers la page d'accueil
+        navigate('/');
+        // Optionnel : Afficher un message de succès
+        alert('Paiement effectué avec succès ! Merci pour votre commande.');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue lors de la finalisation de la commande');
+    }
   };
 
   // Vérifier si un produit spécifique est disponible
@@ -275,8 +305,9 @@ function Cart() {
                 )}
 
                 <button
+                  onClick={() => setIsPaymentModalOpen(true)}
                   className={`w-full mt-6 py-3 px-4 rounded-xl font-medium transition-colors
-                   ${checkCartAvailability()
+   ${checkCartAvailability()
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                       : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                   disabled={!checkCartAvailability()}
@@ -295,6 +326,12 @@ function Cart() {
           </div>
         </div>
       </div>
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        total={getCartTotal()}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 }

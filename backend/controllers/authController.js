@@ -122,10 +122,10 @@ exports.updateUserProfile = async (req, res) => {
 
         // Si un nouveau mot de passe est fourni, vérifier l'ancien
         if (req.body.newPassword) {
-            
+
             // Vérifier la longueur du nouveau mot de passe
             if (req.body.newPassword.length < 6) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     message: 'Le nouveau mot de passe doit contenir au moins 6 caractères'
                 });
             }
@@ -189,5 +189,70 @@ exports.updateUserProfile = async (req, res) => {
         res.status(500).json({
             message: error.message || 'Erreur lors de la mise à jour du profil'
         });
+    }
+};
+
+// @desc    Get all users
+// @route   GET /api/auth/users
+// @access  Admin only
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete user
+// @route   DELETE /api/auth/users/:id
+// @access  Admin only
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Empêcher la suppression d'un admin
+        if (user.isAdmin) {
+            return res.status(400).json({ message: 'Impossible de supprimer un administrateur' });
+        }
+
+        await user.deleteOne();
+        res.json({ message: 'Utilisateur supprimé avec succès' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update user role
+// @route   PUT /api/auth/users/:id/role
+// @access  Admin only
+exports.updateUserRole = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Empêcher la modification du rôle d'un admin par un autre admin
+        if (user.isAdmin && req.user.id !== user._id.toString()) {
+            return res.status(400).json({ message: 'Impossible de modifier le rôle d\'un autre administrateur' });
+        }
+
+        user.isAdmin = req.body.isAdmin;
+        const updatedUser = await user.save();
+
+        res.json({
+            id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            isAdmin: updatedUser.isAdmin
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
