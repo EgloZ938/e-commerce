@@ -32,6 +32,132 @@ Nous avons utilisé **GitHub Copilot** pour :
 
 ---
 
+## 👥 **Les créateurs du projet**  
+Ce projet a été réalisé avec passion par :  
+- **Théo EVON**  
+- **Médy DANIEL**  
+
+---
+
+## 💡 **Conclusion**  
+L’IA a été un outil précieux qui nous a permis de :  
+- Travailler **plus vite** et **mieux**.  
+- Éviter des erreurs.  
+- Produire un code de **qualité**.  
+
+---
+
+# 📝 Exercice : Génération de Tests Automatiques et Défis de Codage avec IA
+
+---
+
+## ✨ **Exercice 1 : Génération de Tests Automatiques avec Copilot**
+
+### 🎯 Objectif :  
+Créer des tests unitaires automatiques dans un projet Node.js pour assurer une couverture de code optimale.
+
+### 📚 **Explications :**
+L'objectif est de tester deux fonctions simples :
+- `add(a, b)` : ajoute deux nombres.
+- `multiply(a, b)` : multiplie deux nombres.
+
+Les tests sont écrits en utilisant **Jest**, un framework de tests populaire pour Node.js. Ils couvrent différents cas, comme l'utilisation de zéro dans les calculs.
+
+### 🛠️ **Exemple de code :**
+#### Fonction `add` :
+```javascript
+function add(a, b) {
+    return a + b;
+}
+```
+
+#### Test pour `add` :
+```javascript
+test('adds two numbers correctly', () => {
+    expect(add(2, 3)).toBe(5);
+});
+```
+
+Ce test vérifie que la fonction additionne correctement deux nombres.
+
+#### Fonction `multiply` :
+```javascript
+function multiply(a, b) {
+    return a * b;
+}
+```
+
+#### Test pour `multiply` :
+```javascript
+test('multiplies two numbers correctly', () => {
+    expect(multiply(2, 3)).toBe(6);
+});
+```
+
+Le test valide que la multiplication fonctionne comme attendu, y compris dans des cas spécifiques comme avec un zéro.
+
+---
+
+## ✨ **Exercice 2 : Défis de Codage avec IA**
+
+### 🎯 Objectif :  
+Créer et comparer différentes méthodes de tri en JavaScript avec l'aide de l'IA.
+
+### 📚 **Explications :**
+Cet exercice présente trois approches différentes pour trier un tableau d'entiers :
+1. **Bubble Sort** : Une méthode simple et lente basée sur des comparaisons successives.
+2. **Quick Sort** : Une méthode rapide et efficace basée sur le paradigme "diviser pour régner".
+3. **Native Sort** : Utilisation de la méthode `sort()` native de JavaScript.
+
+### 🛠️ **Exemple de code :**
+#### Bubble Sort :
+```javascript
+function bubbleSort(arr) {
+    for (let i = 0; i < arr.length - 1; i++) {
+        for (let j = 0; j < arr.length - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; // Swap
+            }
+        }
+    }
+    return arr;
+}
+```
+
+**Explication** :  
+Chaque élément est comparé à son voisin, et un échange est effectué si nécessaire. Ce processus est répété jusqu'à ce que le tableau soit trié.
+
+#### Quick Sort :
+```javascript
+function quickSort(arr) {
+    if (arr.length <= 1) return arr;
+    const pivot = arr[arr.length - 1];
+    const left = arr.filter(el => el < pivot);
+    const right = arr.filter(el => el > pivot);
+    return [...quickSort(left), pivot, ...quickSort(right)];
+}
+```
+
+**Explication** :  
+L'algorithme choisit un pivot et partitionne le tableau en deux parties : les éléments inférieurs et supérieurs au pivot. Ce processus est récursif.
+
+#### Native Sort :
+```javascript
+function nativeSort(arr) {
+    return arr.sort((a, b) => a - b);
+}
+```
+
+**Explication** :  
+La méthode native utilise une fonction de comparaison personnalisée pour trier les éléments.
+
+### 🔍 **Comparaison des Méthodes :**
+- **Bubble Sort** : Simple mais inefficace pour les grands ensembles de données.
+- **Quick Sort** : Rapide et adapté à la plupart des cas.
+- **Native Sort** : Optimisé pour des besoins courants.
+
+---
+
 # ⚙️ **Fonctionnalités du projet**
 
 Notre application e-commerce est une plateforme moderne qui offre une expérience utilisateur complète, allant de la navigation sur les produits jusqu'à la gestion des commandes via une interface administrateur. Voici un aperçu détaillé de ses fonctionnalités :
@@ -141,20 +267,3 @@ Notre application e-commerce est une plateforme moderne qui offre une expérienc
 - **Node.js** avec **Express.js** : API RESTful.  
 - **MongoDB** : Base de données pour stocker les utilisateurs, produits, commandes, etc.  
 - **Stripe API** : Gestion des paiements.
-
----
-
-## 👥 **Les créateurs du projet**  
-Ce projet a été réalisé avec passion par :  
-- **Théo EVON**  
-- **Médy DANIEL**  
-
----
-
-## 💡 **Conclusion**  
-L’IA a été un outil précieux qui nous a permis de :  
-- Travailler **plus vite** et **mieux**.  
-- Éviter des erreurs.  
-- Produire un code de **qualité**.  
-
-Merci d'avoir découvert notre projet ! 🎉
