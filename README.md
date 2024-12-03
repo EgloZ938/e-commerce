@@ -1,5 +1,14 @@
 # 🚀 Utilisation de l’IA dans notre projet
 
+---
+
+## 👥 **Les créateurs du projet**  
+Ce projet a été réalisé avec passion par :  
+- **Théo EVON**  
+- **Médy DANIEL**  
+
+---
+
 ## 🧠 **Comment nous avons utilisé l’IA**  
 Nous avons utilisé **GitHub Copilot** pour :  
 - ✨ Générer du code **React** (composants, hooks, etc.) et des routes **Express**.  
@@ -30,12 +39,6 @@ Nous avons utilisé **GitHub Copilot** pour :
 - 🔧 **Code optimisé** : Propositions basées sur les **bonnes pratiques**, rendant le code plus **lisible** et **maintenable**.  
 - 🛡️ **Moins d’erreurs** : Corrections et alertes sur des erreurs courantes ou des oublis.  
 
----
-
-## 👥 **Les créateurs du projet**  
-Ce projet a été réalisé avec passion par :  
-- **Théo EVON**  
-- **Médy DANIEL**  
 
 ---
 
