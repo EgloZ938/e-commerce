@@ -28,3 +28,23 @@ function nativeSort(arr) {
 module.exports = { bubbleSort, quickSort, nativeSort };
 
 
+/**
+ * Ce module implémente différentes méthodes de tri proposées par l'IA :
+ * 
+ * 1. **Bubble Sort** : 
+ *    - Un algorithme de tri simple basé sur des comparaisons successives de paires d'éléments adjacents.
+ *    - Si les éléments ne sont pas dans le bon ordre, ils sont échangés.
+ *    - Complexité temporelle : O(n^2) dans le pire et le cas moyen, O(n) dans le meilleur cas (tableau déjà trié).
+ *    - Utilisé principalement pour des démonstrations ou des jeux éducatifs en raison de son inefficacité sur les grandes données.
+ * 
+ * 2. **Quick Sort** : 
+ *    - Un algorithme de tri rapide utilisant le paradigme "diviser pour régner".
+ *    - Choisit un pivot, puis partitionne les éléments en deux sous-listes : les éléments inférieurs et supérieurs au pivot.
+ *    - Très performant et souvent utilisé dans les bibliothèques standard.
+ * 
+ * 3. **Native Sort** :
+ *    - Utilise la méthode `Array.prototype.sort()` native de JavaScript avec une fonction de comparaison personnalisée.
+ * 
+ * Ces trois méthodes illustrent différentes approches de tri, allant d'algorithmes éducatifs à des solutions optimisées
+ * pour des environnements de production.
+ */
