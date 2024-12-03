@@ -5,18 +5,26 @@ const {
     loginAdmin,
     register,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    getAllUsers,
+    deleteUser,
+    updateUserRole
 } = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 // Routes publiques
 router.post('/register', register);
 router.post('/login', login);
-router.post('/loginAdmin', loginAdmin); // ta route admin existante
+router.post('/loginAdmin', loginAdmin);
 
 // Routes protégées
 router.route('/profile')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);
+
+// Routes admin
+router.get('/users', protect, admin, getAllUsers);
+router.delete('/users/:id', protect, admin, deleteUser);
+router.put('/users/:id/role', protect, admin, updateUserRole);
 
 module.exports = router;

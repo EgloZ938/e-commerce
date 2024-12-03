@@ -7,6 +7,7 @@ import EditProduct from './pages/EditProduct';
 import Navbar from './components/Navbar';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
+import AdminUsers from './pages/AdminUsers';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -38,7 +39,7 @@ const NavigationWrapper = ({ children }) => {
   const { userInfo } = useSelector((state) => state.auth);
 
   // Liste des routes admin
-  const adminRoutes = ['/admin', '/admin/product', '/loginAdmin'];
+  const adminRoutes = ['/admin', '/admin/product', '/admin/users', '/loginAdmin'];
   const isAdminRoute = adminRoutes.some(route => location.pathname.startsWith(route));
 
   return (
@@ -96,6 +97,10 @@ function App() {
                 <Route
                   path="/admin/product/:id"
                   element={userInfo ? <EditProduct /> : <Navigate to="/loginAdmin" />}
+                />
+                <Route
+                  path="/admin/users"
+                  element={userInfo ? <AdminUsers /> : <Navigate to="/loginAdmin" />}
                 />
               </Routes>
             </NavigationWrapper>
