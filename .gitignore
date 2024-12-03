@@ -10,6 +10,8 @@
 /backend/.env.test.local
 /backend/.env.production.local
 /backend/.pnp
+/Exercices/node_modules
+/frontend/.env
 /.pnp
 .pnp.js
 
