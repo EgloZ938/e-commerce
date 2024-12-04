@@ -20,8 +20,15 @@ export const AuthProvider = ({ children }) => {
             }
           });
           if (response.ok) {
-            const data = await response.json();
-            setUser(data);
+            const userData = await response.json();
+            // S'assurer que toutes les données de l'utilisateur sont présentes
+            setUser({
+              id: userData._id,
+              name: userData.name,
+              email: userData.email,
+              isAdmin: userData.isAdmin,
+              avatar: userData.avatar
+            });
             setIsAuthenticated(true);
           } else {
             localStorage.removeItem('token');
@@ -113,6 +120,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUserAvatar = async (avatar) => {
+    try {
+      setUser(prevUser => ({
+        ...prevUser,
+        avatar
+      }));
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -136,7 +154,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        updateUserProfile
+        updateUserProfile,
+        updateUserAvatar
       }}
     >
       {children}

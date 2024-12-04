@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
 import AdminUsers from './pages/AdminUsers';
+import AdminOrders from './pages/AdminOrders';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -101,6 +102,10 @@ function App() {
                 <Route
                   path="/admin/users"
                   element={userInfo ? <AdminUsers /> : <Navigate to="/loginAdmin" />}
+                />
+                <Route
+                  path="/admin/orders"
+                  element={userInfo ? <AdminOrders /> : <Navigate to="/loginAdmin" />}
                 />
               </Routes>
             </NavigationWrapper>

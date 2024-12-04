@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/Contexts/AuthContext';
+import { EyeIcon } from '@heroicons/react/24/outline';
+import OrderDetailsModal from '../components/OrderDetailsModal';
+import AvatarUploadModal from '../components/AvatarUploadModal';
+import axios from 'axios';
 
 function Profile() {
-    const { user, updateUserProfile } = useAuth();
+    const { user, updateUserProfile, updateUserAvatar } = useAuth();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -18,6 +22,12 @@ function Profile() {
         new: false,
         confirm: false
     });
+    const [orders, setOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -28,6 +38,75 @@ function Profile() {
             }));
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const { data } = await axios.get(`http://localhost:5000/api/orders/myorders`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                });
+                setOrders(data);
+                setLoadingOrders(false);
+            } catch (error) {
+                console.error('Erreur lors du chargement des commandes:', error);
+                setLoadingOrders(false);
+            }
+        };
+
+        fetchOrders();
+    }, []);
+
+    const handleModalOpen = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setAvatarFile(null);
+        setAvatarPreview('');
+    };
+
+    const handleCroppedImage = async (croppedFile) => {
+        setAvatarFile(croppedFile);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setAvatarPreview(reader.result);
+        };
+        reader.readAsDataURL(croppedFile);
+        setIsModalOpen(false);
+    };
+
+    const handleAvatarUpload = async () => {
+        if (!avatarFile) return;
+
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+
+        try {
+            setLoading(true);
+            const response = await axios.put(
+                'http://localhost:5000/api/auth/profile/avatar',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+
+            if (response.data.avatar) {
+                // Utiliser la nouvelle fonction updateUserAvatar au lieu de updateUserProfile
+                await updateUserAvatar(response.data.avatar);
+                setSuccess('Photo de profil mise à jour avec succès');
+                setAvatarFile(null);
+            }
+        } catch (error) {
+            setError(error.response?.data?.message || 'Erreur lors de la mise à jour de la photo de profil');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({
@@ -132,13 +211,35 @@ function Profile() {
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
                     <div className="flex items-center space-x-4">
-                        <div className="h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold">
-                            {user?.name?.charAt(0).toUpperCase()}
+                        <div className="relative group" onClick={handleModalOpen}>
+                            <div className="h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer">
+                                {avatarPreview || user?.avatar ? (
+                                    <img
+                                        src={avatarPreview || `http://localhost:5000/uploads/${user.avatar}`}
+                                        alt="Profile"
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    user?.name?.charAt(0).toUpperCase()
+                                )}
+                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                    <span className="text-white text-sm">Changer</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
+                        <div className="flex-grow">
                             <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
                             <p className="text-gray-600">Gérez vos informations personnelles et votre sécurité</p>
                         </div>
+                        {avatarFile && (
+                            <button
+                                onClick={handleAvatarUpload}
+                                disabled={loading}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Chargement...' : 'Sauvegarder la photo'}
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -336,6 +437,79 @@ function Profile() {
                     </form>
                 </div>
             </div>
+            {/* Section Commandes */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Mes Commandes</h2>
+
+                {loadingOrders ? (
+                    <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                    </div>
+                ) : orders.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">Aucune commande pour le moment</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">N° Commande</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {orders.map((order) => (
+                                    <tr key={order._id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-medium text-gray-900">
+                                                #{order._id.slice(-6)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                            {new Date(order.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                                            {order.totalPrice.toFixed(2)} €
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.isDelivered
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-blue-100 text-blue-800'
+                                                }`}>
+                                                {order.isDelivered ? 'Livré' : 'En cours'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <button
+                                                onClick={() => setSelectedOrder(order)}
+                                                className="text-indigo-600 hover:text-indigo-900"
+                                            >
+                                                <EyeIcon className="h-5 w-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Modal de détails de commande */}
+            <OrderDetailsModal
+                isOpen={selectedOrder !== null}
+                onClose={() => setSelectedOrder(null)}
+                order={selectedOrder}
+            />
+
+            {/* Modal de téléchargement d'avatar */}
+            <AvatarUploadModal
+                isOpen={isModalOpen}
+                onClose={handleModalClose}
+                onSave={handleCroppedImage}
+            />
         </div>
     );
 }
