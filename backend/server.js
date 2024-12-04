@@ -10,6 +10,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const authRoutes = require('./routes/authRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 // Créer le dossier uploads s'il n'existe pas
 const fs = require('fs');
@@ -42,6 +43,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Gestion des erreurs améliorée
 app.use((err, req, res, next) => {
