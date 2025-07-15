@@ -34,7 +34,7 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
                                             <img
                                                 className="h-20 w-20 rounded-lg object-cover"
                                                 src={product.image.startsWith('/uploads')
-                                                    ? `http://localhost:5000${product.image}`
+                                                    ? product.image
                                                     : product.image
                                                 }
                                                 alt={product.name}

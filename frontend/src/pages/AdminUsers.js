@@ -12,7 +12,7 @@ const AdminUsers = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const { data } = await axios.get('http://localhost:5000/api/auth/users', {
+                const { data } = await axios.get('/api/auth/users', {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 setUsers(data);
@@ -29,7 +29,7 @@ const AdminUsers = () => {
     const handleDeleteUser = async (userId) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/auth/users/${userId}`, {
+                await axios.delete(`/api/auth/users/${userId}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 setUsers(users.filter(user => user._id !== userId));
@@ -42,7 +42,7 @@ const AdminUsers = () => {
     const handleRoleUpdate = async (userId, currentIsAdmin) => {
         try {
             const { data } = await axios.put(
-                `http://localhost:5000/api/auth/users/${userId}/role`,
+                `/api/auth/users/${userId}/role`,
                 { isAdmin: !currentIsAdmin },
                 { headers: { Authorization: `Bearer ${userInfo.token}` } }
             );

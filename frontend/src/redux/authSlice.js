@@ -6,7 +6,7 @@ export const login = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       // Changé l'URL pour matcher avec la route backend
-      const { data } = await axios.post('http://localhost:5000/api/auth/loginAdmin', {
+      const { data } = await axios.post('/api/auth/loginAdmin', {
         email,
         password,
       });

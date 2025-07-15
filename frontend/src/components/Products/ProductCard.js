@@ -51,7 +51,7 @@ const ProductCard = ({ product }) => {
         <div className="relative h-full flex items-center justify-center p-4">
           <img
             src={product.image.startsWith('/uploads')
-              ? `http://localhost:5000${product.image}`
+              ? product.image
               : product.image
             }
             alt={product.name}

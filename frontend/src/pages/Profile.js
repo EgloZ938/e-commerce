@@ -42,7 +42,7 @@ function Profile() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const { data } = await axios.get(`http://localhost:5000/api/orders/myorders`, {
+                const { data } = await axios.get(`/api/orders/myorders`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 setOrders(data);
@@ -85,7 +85,7 @@ function Profile() {
         try {
             setLoading(true);
             const response = await axios.put(
-                'http://localhost:5000/api/auth/profile/avatar',
+                '/api/auth/profile/avatar',
                 formData,
                 {
                     headers: {
@@ -215,7 +215,7 @@ function Profile() {
                             <div className="h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer">
                                 {avatarPreview || user?.avatar ? (
                                     <img
-                                        src={avatarPreview || `http://localhost:5000/uploads/${user.avatar}`}
+                                        src={avatarPreview || `/uploads/${user.avatar}`}
                                         alt="Profile"
                                         className="h-full w-full object-cover"
                                     />

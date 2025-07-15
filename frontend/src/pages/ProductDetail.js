@@ -15,7 +15,7 @@ function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const response = await fetch(`/api/products/${id}`);
         if (!response.ok) {
           throw new Error('Produit non trouvé');
         }
@@ -109,7 +109,7 @@ function ProductDetail() {
               <div className="w-full h-[300px] md:h-[500px] flex items-center justify-center bg-white rounded-lg shadow-sm">
                 <img
                   src={product.image.startsWith('/uploads')
-                    ? `http://localhost:5000${product.image}`
+                    ? product.image
                     : product.image
                   }
                   alt={product.name}

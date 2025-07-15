@@ -128,7 +128,7 @@ function ProductList() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/products');
+                const response = await fetch('/api/products');
                 const data = await response.json();
                 setProducts(data);
 
@@ -258,7 +258,7 @@ function ProductList() {
                                     <div className="relative h-full flex items-center justify-center p-4">
                                         <img
                                             src={product.image.startsWith('/uploads')
-                                                ? `http://localhost:5000${product.image}`
+                                                ? product.image
                                                 : product.image
                                             }
                                             alt={product.name}

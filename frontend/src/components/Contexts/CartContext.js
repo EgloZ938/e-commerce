@@ -19,7 +19,7 @@ export const CartProvider = ({ children }) => {
 
   const fetchCart = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/cart', {
+      const response = await fetch('/api/cart', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -40,7 +40,7 @@ export const CartProvider = ({ children }) => {
         return false;
       }
 
-      const response = await fetch('http://localhost:5000/api/cart', {
+      const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+      const response = await fetch(`/api/cart/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -101,7 +101,7 @@ export const CartProvider = ({ children }) => {
       setCartItems(updatedItems);
 
       // Appel API en arrière-plan
-      const response = await fetch('http://localhost:5000/api/cart', {
+      const response = await fetch('/api/cart', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

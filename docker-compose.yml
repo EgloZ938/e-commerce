@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: backend_container
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      # N'oublie pas d'ajouter ici toutes tes autres variables d'environnement (ex: JWT_SECRET, STRIPE_SECRET_KEY)
+    depends_on:
+      - mongodb
+    restart: always
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads # Pour la persistance des fichiers uploadés
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_container
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  mongodb_data:
+  uploads_data: # Déclare le volume pour les uploads

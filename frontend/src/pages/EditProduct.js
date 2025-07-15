@@ -20,7 +20,7 @@ const EditProduct = () => {
 
     const fetchProduct = useCallback(async () => {
         try {
-            const { data } = await axios.get(`http://localhost:5000/api/products/${id}`);
+            const { data } = await axios.get(`/api/products/${id}`);
             setProduct(data);
             setLoading(false);
         } catch (error) {
@@ -37,7 +37,7 @@ const EditProduct = () => {
         e.preventDefault();
         try {
             await axios.put(
-                `http://localhost:5000/api/products/${id}`,
+                `/api/products/${id}`,
                 product,
                 {
                     headers: { Authorization: `Bearer ${userInfo.token}` }

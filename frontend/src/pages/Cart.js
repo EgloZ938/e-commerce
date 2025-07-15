@@ -21,7 +21,7 @@ function Cart() {
 
   const handlePaymentSuccess = async (paymentIntent) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/stripe/payment-success',
+      const response = await axios.post('/api/stripe/payment-success',
         {
           paymentIntentId: paymentIntent.id
         },
@@ -159,7 +159,7 @@ function Cart() {
                         <div className="flex items-center gap-4">
                           <img
                             src={item.product.image.startsWith('/uploads')
-                              ? `http://localhost:5000${item.product.image}`
+                              ? item.product.image
                               : item.product.image
                             }
                             alt={item.product.name}

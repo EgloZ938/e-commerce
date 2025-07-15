@@ -56,7 +56,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                                             <div className="flex items-center">
                                                 <img
                                                     src={item.image.startsWith('/uploads')
-                                                        ? `http://localhost:5000${item.image}`
+                                                        ? item.image
                                                         : item.image
                                                     }
                                                     alt={item.name}

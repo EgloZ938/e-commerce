@@ -29,7 +29,7 @@ const AdminDashboard = () => {
 
     const fetchProducts = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/products');
+            const { data } = await axios.get('/api/products');
             setProducts(data);
             setLoading(false);
         } catch (error) {
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/products/${id}`, {
+                await axios.delete(`/api/products/${id}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 setProducts(products.filter(product => product._id !== id));
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
     const handleNewProductSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/api/products', newProduct, {
+            const response = await axios.post('/api/products', newProduct, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setProducts([...products, response.data]);
